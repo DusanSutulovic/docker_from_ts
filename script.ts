@@ -1,23 +1,27 @@
 import { spawn } from 'child_process';
 
+export interface ILogger {
+    info(loggedInfo: string): void;
+}
+
 export class DockerContainerHandler {
-    constructor(private composePath) {}
+    constructor(private composePath: string, private logger?: ILogger) {}
     
     private handleDockerProcess(optionsAdd: string[]): Promise<void> {
         return new Promise((resolve, reject) => {
         const options: string[] = ['compose', '-f'].concat(optionsAdd);
         const dockerProcess = spawn('docker', options);
         dockerProcess.stdout.on('data', (data) => {
-            console.log(`Docker Log: ${data}`);
+            this.logger?.info(`Docker Log: ${data}`);
             });
     
         dockerProcess.stderr.on('data', (data) => {
-            console.log(`Docker Log: ${data}`);
+            this.logger?.info(`Docker Log: ${data}`);
             });
 
         dockerProcess.on('close', (code) => {
             if (code === 0) {
-                console.log(`Container ${this.composePath} started successfully.`);
+                this.logger?.info(`Container ${this.composePath} started successfully.`);
                 resolve();
             } else {
                 reject(new Error(`Docker process exited with code ${code}`));
